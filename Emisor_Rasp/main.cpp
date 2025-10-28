@@ -1,28 +1,57 @@
 #include "funcionesMenu.h"
+#include <iostream> 
+#include <string>   
+#include <stdexcept>  
 
 int main() {
-#define TX_PIN 17
-if(wiringPiSetupGpio()==-1) {
-		printf("ERROR");
-		return 0;
-}
+    if (wiringPiSetupGpio() == -1) {
+        printf("ERROR: No se pudo inicializar WiringPi.\n");
+        return 1;
+    }
+    
     pinMode(TX_PIN, OUTPUT);
-    digitalWrite(TX_PIN, HIGH);
-    char buf[32];
+    digitalWrite(TX_PIN, HIGH); // Poner la línea en reposo
+
+    std::string input_linea;
+    long opt = 0;
+
     for (;;) {
-        puts("");
+        puts(""); 
         for (size_t i = 0; i < sizeof(menu)/sizeof(menu[0]); ++i) {
             puts(menu[i]);
         }
         printf("Seleccione opción [0-9]: ");
-        if (!fgets(buf, sizeof(buf), stdin)) { clearerr(stdin); continue; }
-        buf[strcspn(buf, "\r\n")] = '\0';
 
-        char* end = NULL;
-        long opt = strtol(buf, &end, 10);
-        if (end == buf || *end != '\0') { puts("Entrada inválida."); continue; }
-        if (opt < 0 || opt > 9) { puts("Fuera de rango (0-9)."); continue; }
-        if (opt == 0) { puts("Saliendo..."); break; }
+        // --- Lectura de Opción (Estilo C++) ---
+        if (!std::getline(std::cin, input_linea)) {
+            clearerr(stdin); // Limpiar error si algo falla
+            std::cin.clear();
+            continue; 
+        }
+        
+        // ¡¡ESTA ES LA CORRECCIÓN CLAVE!!
+        // Si la línea está vacía (porque el usuario solo presionó Enter,
+        // o por un '\n' fantasma), simplemente vuelve a mostrar el menú.
+        if (input_linea.empty()) {
+            continue;
+        }
+        // --- Fin Corrección ---
+
+        try {
+            opt = std::stol(input_linea); // Usamos stol (requiere -std=c++0x)
+        } catch (const std::invalid_argument& e) {
+            puts("Entrada inválida."); 
+            continue; 
+        }
+
+        if (opt < 0 || opt > 9) { 
+            puts("Fuera de rango (0-9)."); 
+            continue; 
+        }
+        if (opt == 0) { 
+            puts("Saliendo..."); 
+            break; 
+        }
 
         // Despacho de opción
         switch ((int)opt) {

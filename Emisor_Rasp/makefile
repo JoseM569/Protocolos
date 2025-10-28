@@ -1,31 +1,31 @@
-# Objetivo por defecto: compilar el programa. Se ejecuta con "make" o "make all".
+# --- Definimos las banderas del compilador (Flags) ---
+#  -Wall (activa todos los warnings)
+#  -std=c++0x (activa el estándar C++11 experimental para compiladores antiguos)
+CXXFLAGS = -Wall -std=c++0x
+
+# Objetivo por defecto: compilar el programa
 all: run
 
-# Regla para crear el ARCHIVO EJECUTABLE llamado 'run'.
-# Depende de los archivos .o.
+# Regla para crear el ARCHIVO EJECUTABLE 'run'
 run: main.o funcionesProtocolo.o funcionesMenu.o
-	g++ -Wall -o run main.o funcionesProtocolo.o funcionesMenu.o -lwiringPi
+	g++ $(CXXFLAGS) -o run main.o funcionesProtocolo.o funcionesMenu.o -lwiringPi
 
-# Reglas para crear los archivos objeto (.o) a partir de los archivos de código (.cpp).
+# Reglas para crear los archivos objeto (.o)
 main.o: main.cpp
-	g++ -Wall -c main.cpp
+	g++ $(CXXFLAGS) -c main.cpp
 
 funcionesProtocolo.o: funcionesProtocolo.cpp
-	g++ -Wall -c funcionesProtocolo.cpp
+	g++ $(CXXFLAGS) -c funcionesProtocolo.cpp
 
 funcionesMenu.o: funcionesMenu.cpp
-	g++ -Wall -c funcionesMenu.cpp
+	g++ $(CXXFLAGS) -c funcionesMenu.cpp
 
 # --- ACCIONES ---
 
-# Regla para ejecutar el programa.
-# Primero se asegura de que el archivo 'run' esté compilado y luego lo ejecuta.
 run_program: run
 	./run
 
-# Regla para limpiar el directorio.
 clean:
 	rm -f *.o run
 
-# Declara los objetivos que son acciones y no archivos.
 .PHONY: all clean run_program

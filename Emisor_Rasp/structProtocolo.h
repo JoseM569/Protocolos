@@ -4,8 +4,11 @@
 #include <string>
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
+#include <string.h> 
 #include <wiringPi.h>
+#include <stdexcept>    // Para std::invalid_argument (para la validación)
+#include <sstream>      // Para std::ostringstream (para formatear array)
+#include <unistd.h>     // Para usleep() / sleep() (si es necesario un delay)
 
 #define BYTE unsigned char
 #define LARGO_DATA 63
