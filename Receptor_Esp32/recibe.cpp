@@ -39,9 +39,7 @@ int readByte(int pin, int speed, BYTE* byte) {
 
 bool recibirFrame(int pin, int speed, protocolo & proto) {
     memset(&proto, 0, sizeof(protocolo)); 
-
     unsigned long msTime = 1000 / speed; // 100ms
-
     int paridad_frame = 0; 
     int paridad_byte = 0;
     
@@ -65,19 +63,36 @@ bool recibirFrame(int pin, int speed, protocolo & proto) {
         if (paridad_byte == -1) return false; 
         paridad_frame += paridad_byte;
     }
-
-    while (digitalRead(pin) == HIGH); 
-    delay(msTime / 2); // Esperamos 50ms
-    bool paridad_recibida = digitalRead(pin);
+ 
+    unsigned long start_wait = millis();
+    while (digitalRead(pin) == HIGH) {
+        // Timeout: Si la línea se queda en HIGH por más de ~1.5 bit-times
+        // (150ms), asumimos que es un bit de paridad IMPAR (HIGH) y salimos.
+        if (millis() - start_wait > (msTime * 1.5)) {
+            break; 
+        }
+    }
     
-    delay(msTime); // Esperamos 100ms (para el bit de stop)
+    // Ahora estamos al inicio del bit de paridad (o hemos salido por timeout)
+    
+    delay(msTime / 2); // Esperamos 50ms para ponernos en el centro
+    
+    bool paridad_recibida = digitalRead(pin); // Leemos el bit (HIGH o LOW)
+    
+    // Ahora esperamos el bit de stop final
+    delay(msTime); 
     if (digitalRead(pin) == LOW) {
-        return false; 
+        return false; // El bit de stop final falló
     }
 
-    bool paridad_calculada = (paridad_frame % 2 != 0); 
+    // Comparamos la paridad
+    bool paridad_calculada = (paridad_frame % 2 != 0); // true si es impar
 
-    return (paridad_recibida == paridad_calculada);
+    if (paridad_recibida == paridad_calculada) {
+        return true; // ¡ÉXITO!
+    } else {
+        return false; // Error de paridad
+    }
 }
 
 bool desempaquetar(protocolo & proto) {
